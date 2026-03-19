@@ -3,6 +3,40 @@
 Bestillingssystem for Restaurant Utsyn ved Tangen videregående skole.
 Online reservation system for Restaurant Utsyn at Tangen Upper Secondary School.
 
+# Roller
+
+-Iusup, 
+    -utvikler, drift, optimismer 
+
+-Nell
+    -design, brukerstøtte, tidlig utvikler i prosjektet
+
+-Helle    
+    -design, brukerstøtte, tidlig utvikler i prosjektet, prototype design
+
+Hvorfor disse rollene
+
+Isusp
+-Han kom in etter vi var hadde komme opp med hoved ideen, han er god på å kode og lage databaser som hjalp oss med og effektivisere arbeidet
+
+Nell
+-Han hjalp med design og dokumentere og tidlig design av system/ database system
+
+Helle
+-Hun har hjalp med tidligere design og tidlige løsninger til database samt ideer på videre utvikling.
+
+Typer av teknologi brukt
+
+Slutt produktet
+
+    -typescript
+    -html
+    -css
+
+prototype
+
+    -figma
+    
 ## Forutsetninger
 
 - Node.js 18 eller nyere: https://nodejs.org/
