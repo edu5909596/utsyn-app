@@ -6,7 +6,7 @@ import { LocaleProvider, useLocale } from '@/components/LocaleProvider';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import A11yToolbar from '@/components/A11yToolbar';
-import { IconClock, IconMoney, IconMapPin } from '@/components/Icons';
+import { IconClock, IconClipboard, IconMapPin } from '@/components/Icons';
 
 interface OpenDay {
   day_of_week: number;
@@ -80,7 +80,7 @@ function HomePage() {
 
             {/* Prices / Menu */}
             <div className="card animate-in">
-              <div className="card-icon" aria-hidden="true"><IconMoney size={24} /></div>
+              <div className="card-icon" aria-hidden="true"><IconClipboard size={24} /></div>
               <h3>{locale === 'no' ? 'Meny' : 'Menu'}</h3>
               <div style={{ marginTop: 'var(--space-md)' }}>
                 {menuCategories.map(category => (
