@@ -64,7 +64,7 @@ function initializeDatabase(database: Database.Database) {
       date TEXT NOT NULL,
       time_slot TEXT NOT NULL,
       comment TEXT DEFAULT '',
-      status TEXT NOT NULL DEFAULT 'confirmed' CHECK(status IN ('confirmed', 'cancelled', 'completed', 'no_show')),
+      status TEXT NOT NULL DEFAULT 'confirmed' CHECK(status IN ('confirmed', 'cancelled', 'completed', 'no_show', 'needs_seat')),
       confirmation_code TEXT UNIQUE,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
