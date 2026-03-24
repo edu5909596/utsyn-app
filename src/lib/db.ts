@@ -2,12 +2,12 @@ import postgres from 'postgres';
 
 const DATABASE_URL = process.env.DATABASE_URL || 'postgres://postgres:postgres@localhost:5432/utsyn';
 
-const sslConfig = process.env.NODE_ENV === 'production' 
-? { 
-    ca: process.env.DB_CA_CERT || process.env.NODE_EXTRA_CA_CERTS, 
-    rejectUnauthorized: true 
-  } 
-: false;
+const sslConfig = process.env.NODE_ENV === 'production'
+  ? {
+    ca: process.env.DB_CA_CERT || process.env.NODE_EXTRA_CA_CERTS,
+    rejectUnauthorized: process.env.DB_REJECT_UNAUTHORIZED === 'true'
+  }
+  : false;
 
 const sql = postgres(DATABASE_URL, {
   ssl: sslConfig
@@ -132,7 +132,7 @@ export async function initializeDatabase() {
         { key: 'sms_template_received', value: 'Takk for din bestilling hos Restaurant Utsyn! Din kode er {kode}. Vi vil bekrefte og tildele bord snart. Dette gjelder {dato} kl {tid} for {antall} gjester.' },
         { key: 'sms_template_confirmed', value: 'Din reservasjon hos Restaurant Utsyn for {dato} kl {tid} er nå bekreftet og bord er tildelt. Velkommen!' },
       ];
-      
+
       await sql`INSERT INTO settings ${sql(defaultSettings, 'key', 'value')} ON CONFLICT DO NOTHING`;
     }
 
