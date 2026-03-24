@@ -13,7 +13,7 @@
     "isolatedModules": true,
     "jsx": "react-jsx",
     "incremental": true,
-    "types": ["node", "react", "react-dom", "better-sqlite3", "jsonwebtoken"],
+    "types": ["node", "react", "react-dom", "jsonwebtoken"],
     "plugins": [
       {
         "name": "next"

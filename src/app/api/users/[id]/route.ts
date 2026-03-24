@@ -19,8 +19,8 @@ export async function DELETE(
             return NextResponse.json({ error: 'Cannot delete your own account' }, { status: 400 });
         }
 
-        const db = getDb();
-        db.prepare('DELETE FROM users WHERE id = ?').run(id);
+        const sql = await getDb();
+        await sql`DELETE FROM users WHERE id = ${id}`;
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error('User DELETE error:', error);

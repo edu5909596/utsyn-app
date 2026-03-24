@@ -5,14 +5,14 @@ Online reservation system for Restaurant Utsyn at Tangen Upper Secondary School.
 
 # Roller
 
--Iusup, 
-    -utvikler, drift, optimismer 
+- Iusup
+    - utvikler, drift, optimismer, database, design, deploy, feilretting, frontend, backend
 
--Nell
-    -design, brukerstøtte, tidlig utvikler i prosjektet
+- Nell
+    - prototype design, brukerstøtte, tidlig figma-utvikler i prosjektet, kundemøter
 
--Helle    
-    -design, brukerstøtte, tidlig utvikler i prosjektet, prototype design
+- Helle    
+    - prototype design, brukerstøtte, tidlig figma-utvikler i prosjektet, kundemøter
 
 Hvorfor disse rollene
 
@@ -40,7 +40,8 @@ prototype
 ## Forutsetninger
 
 - Node.js 18 eller nyere: https://nodejs.org/
-- npm (folger med Node.js)
+- npm (følger med Node.js)
+- En PostgreSQL-database (f.eks. fra Supabase, Neon, eller lokalt)
 
 ## Installasjon
 
@@ -57,13 +58,14 @@ cd utsyn-app
 npm install
 ```
 
-3. (Valgfritt) Sett miljovariabler. Opprett `.env.local`:
+3. Sett miljøvariabler. Opprett `.env.local`:
 
 ```
+DATABASE_URL=postgres://bruker:passord@host:port/database?sslmode=require
 JWT_SECRET=en-lang-tilfeldig-tekst-her
 ```
 
-Hvis denne ikke er satt, brukes en standard-verdi. For produksjon **ma** dette settes.
+**Viktig:** `DATABASE_URL` er påkrevd for at applikasjonen skal fungere.
 
 ## Kjoring
 
@@ -90,13 +92,12 @@ PORT=8080 npm start
 
 ## Forstegangsoppsett
 
-1. Start serveren med `npm run dev` eller `npm start`
-2. Ga til http://localhost:3000/admin
-3. Første gang du besøker denne siden, vises et oppsettskjema
-4. Skriv inn brukernavn (minst 3 tegn) og passord (minst 6 tegn)
-5. Logg inn med den nye kontoen
-
-Databasen (`data/utsyn.db`) opprettes automatisk forste gang serveren startes.
+1. Sørg for at `DATABASE_URL` er satt i `.env.local`
+2. Start serveren med `npm run dev`
+3. Gå til http://localhost:3000/admin
+4. Første gang du besøker denne siden, opprettes tabellene automatisk, og du ser et oppsettskjema
+5. Skriv inn brukernavn og passord for den første administratoren
+6. Logg inn med den nye kontoen
 
 ## Struktur
 
@@ -130,63 +131,54 @@ src/
     LocaleProvider.tsx     Sprakstotte (norsk/engelsk)
   lib/                    Hjelpefunksjoner
     auth.ts               JWT og passord-hashing
-    db.ts                 SQLite database og skjema
+    db.ts                 PostgreSQL database og skjema (postgres.js)
     i18n.ts               Oversettelser (norsk og engelsk)
     utils.ts              Validering, formatering, hjelpefunksjoner
-data/                     SQLite-database (genereres automatisk)
 ```
 
 ## Funksjoner
 
 ### For gjester
 
-- Bestilling av bord direkte pa nettsiden, 24/7
+- Bestilling av bord direkte på nettsiden, 24/7
 - Flerstegs wizard: antall gjester, dato, tidspunkt, kontaktinfo, bekreftelse
 - Se tilgjengelige og opptatte tidspunkter
 - Bekreftelseskode etter bestilling
-- Norsk og engelsk (bytt i toppmenyen)
-- Tilgjengelig for alle: tastaturnavigasjon, skjermleser, justerbar skrift, hoykontrast
+- Norsk og engelsk
+- Universell utforming (WCAG 2.1)
 
 ### For ansatte
 
 - Oversikt over dagens og kommende reservasjoner
-- Marker reservasjoner som fullfort, kansellert eller ikke-mott
-- Filtrer etter dato og status
-- Interaktivt bordkart for å manuelt tildele og bekrefte bord med tilhørende utsending av bekreftelses-SMS
+- Marker reservasjoner som fullført, kansellert eller ikke-møtt
+- Interaktivt bordkart for å manuelt tildele og bekrefte bord med SMS-varsling
 
 ### For administratorer
 
-- Alt ansatte kan, pluss:
-- Rediger apningstider (dag for dag)
-- Legg til stengte dager (ferier, helligdager)
-- Endre priser, adresse, telefon, e-post
-- Endre forsiden (tittel, undertittel, om oss) pa norsk og engelsk
-- Opprett og slett brukerkontoer (administrator eller ansatt)
-- Konfigurer SMS-leverandør (Twilio eller Webhook) og skreddersy egne SMS-maler direkte i nettleseren
+- Rediger åpningstider og stengte dager
+- Endre priser, kontaktinfo og innhold på forsiden
+- Brukeradministrasjon (admin/ansatt)
+- Konfigurer SMS-leverandør (Twilio eller Webhook)
 
 ## Database
 
-Databasen opprettes automatisk forste gang serveren starter. Filen lagres som `data/utsyn.db`.
+Applikasjonen bruker **PostgreSQL** som database. Tabellene opprettes automatisk ved første oppstart via `src/lib/db.ts`.
 
 Tabeller:
-
-- `users` - Admin- og ansattkontoer
-- `settings` - Innstillinger (nokkel-verdi)
-- `open_days` - Apningstider per ukedag
-- `special_closures` - Spesielle stengte dager
-- `reservations` - Bordbestillinger
+- `users` - Kontoer
+- `settings` - Konfigurasjon
+- `open_days` - Åpningstider
+- `special_closures` - Stengte dager
+- `reservations` - Bestillinger
 - `tables_config` - Bordoppsett
-
-For a nullstille databasen: slett `data/utsyn.db` og start serveren pa nytt.
+- `table_assignments` - Tildelte bord
 
 ## Sikkerhet
 
-- Passord hashes med bcrypt (12 runder)
-- Innlogging via JWT i httpOnly-cookies
-- Input-validering og sanitering pa alle API-ruter
-- Rate limiting pa bestillinger
-- Parameteriserte SQL-sporringer (ingen SQL-injeksjon)
-- CORS-beskyttelse via Next.js
+- Passord hashes med bcrypt
+- Autentisering via JWT i httpOnly-cookies
+- Parameteriserte SQL-spørringer (postgres.js tagged templates)
+- CORS og Input-validering
 
 ## SMS-oppsett (valgfritt)
 
@@ -209,7 +201,7 @@ Forespørselen inneholder følgende JSON:
 ```
 
 ### SMS-Maler og Utsendelse
-Du kan fritt redigere innholdet på SMS-meldingene direkte i admin-panelet via to maler (med hjelp av hendige variabler som `{kode}`, `{dato}`, `{tid}` og `{antall}`):
+Du kan fritt redigere innholdet på SMS-meldingene direkte i admin-panelet via to maler (med hjelp av hendige variabler som {kode}, {dato}, {tid} og {antall}):
 - **SMS Mal - Ny booking:** Sendes umiddelbart og automatisk når en gjest oppretter en ny bestilling.
 - **SMS Mal - Bekreftelse/Bord tildelt:** Sendes manuelt av personalet når de har tildelt nok bordplasser til gjesten via "Bordkart"-siden og deretter trykker "Bekreft & Send SMS".
 
@@ -231,23 +223,20 @@ Nettsiden folger WCAG 2.1 AA:
 
 ## Teknologier
 
-- Next.js 16 (App Router, TypeScript)
-- SQLite via better-sqlite3
-- JWT + bcrypt for autentisering
-- Vanilla CSS med designtokens
-- Eget oversettelsessystem (norsk/engelsk)
+- **Framework:** Next.js (App Router, TypeScript)
+- **Database:** PostgreSQL via `postgres.js`
+- **Autentisering:** JWT + bcrypt
+- **Styling:** Vanilla CSS med moderne designsystem
+- **Språk:** Norsk og engelsk (i18n)
 
 ## Feilsoking
 
-Serveren starter ikke:
+**Tilkoblingsfeil mot database:**
+- Sjekk at `DATABASE_URL` i `.env.local` er korrekt
+- Sjekk at databasen tillater tilkoblinger og at SSL er konfigurert hvis nødvendig (`?sslmode=require`)
 
-- Sjekk at Node.js 18+ er installert: `node --version`
-- Sjekk at port 3000 er ledig
-- Slett `.next`-mappen og prov igjen: `rm -rf .next && npm run dev`
-
-Databasefeil:
-
-- Slett `data/utsyn.db` og start pa nytt for a nullstille
+**Build-feil:**
+- Prøv å slette `.next`-mappen: `rm -rf .next && npm run build`
 
 Lock-feil ved `npm run dev`:
 
@@ -255,4 +244,4 @@ Lock-feil ved `npm run dev`:
 
 ## Lisens
 
-Laget for Tangen videregaende skole.
+Laget for Tangen videregående skole.

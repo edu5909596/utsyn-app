@@ -9,9 +9,9 @@ export async function GET() {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const db = getDb();
-        const closures = db.prepare('SELECT * FROM special_closures ORDER BY date ASC').all();
-        return NextResponse.json(closures);
+        const sql = await getDb();
+        const rows = await sql`SELECT * FROM special_closures ORDER BY date ASC`;
+        return NextResponse.json(rows);
     } catch (error) {
         console.error('Closures GET error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -33,10 +33,10 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Invalid date' }, { status: 400 });
         }
 
-        const db = getDb();
-        db.prepare('INSERT OR REPLACE INTO special_closures (date, reason_no, reason_en) VALUES (?, ?, ?)').run(
-            date, reason_no || '', reason_en || ''
-        );
+        const sql = await getDb();
+        await sql`INSERT INTO special_closures (date, reason_no, reason_en) 
+                  VALUES (${date}, ${reason_no || ''}, ${reason_en || ''}) 
+                  ON CONFLICT (date) DO UPDATE SET reason_no = EXCLUDED.reason_no, reason_en = EXCLUDED.reason_en`;
 
         return NextResponse.json({ success: true }, { status: 201 });
     } catch (error) {

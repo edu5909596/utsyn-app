@@ -12,9 +12,14 @@ export async function DELETE(
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const { id } = await params;
-        const db = getDb();
-        db.prepare('DELETE FROM special_closures WHERE id = ?').run(id);
+        const { id: rawId } = await params;
+        const id = Number(rawId);
+        if (isNaN(id) || !Number.isInteger(id) || id <= 0) {
+            return NextResponse.json({ error: 'Invalid ID format' }, { status: 400 });
+        }
+
+        const sql = await getDb();
+        await sql`DELETE FROM special_closures WHERE id = ${id}`;
         return NextResponse.json({ success: true });
     } catch (error) {
         console.error('Closure DELETE error:', error);

@@ -146,7 +146,10 @@ export default function BordPage() {
                 fetch(`/api/tables/assignments?date=${filterDate}`)
             ]);
 
-            setTables(await tablesRes.json());
+            const tablesData = await tablesRes.json();
+            if (Array.isArray(tablesData)) {
+                setTables(tablesData);
+            }
 
             const fetchedRes = await resRes.json();
             if (Array.isArray(fetchedRes)) {

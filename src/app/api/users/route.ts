@@ -9,9 +9,9 @@ export async function GET() {
             return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
         }
 
-        const db = getDb();
-        const users = db.prepare('SELECT id, username, display_name, role, created_at FROM users ORDER BY created_at DESC').all();
-        return NextResponse.json(users);
+        const sql = await getDb();
+        const rows = await sql`SELECT id, username, display_name, role, created_at FROM users ORDER BY created_at DESC`;
+        return NextResponse.json(rows);
     } catch (error) {
         console.error('Users GET error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -38,16 +38,15 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Invalid role' }, { status: 400 });
         }
 
-        const db = getDb();
-        const existing = db.prepare('SELECT id FROM users WHERE username = ?').get(username);
-        if (existing) {
+        const sql = await getDb();
+        const existingResult = await sql`SELECT id FROM users WHERE username = ${username}`;
+        if (existingResult.length > 0) {
             return NextResponse.json({ error: 'Username already exists' }, { status: 409 });
         }
 
         const passwordHash = await hashPassword(password);
-        db.prepare('INSERT INTO users (username, password_hash, display_name, role) VALUES (?, ?, ?, ?)').run(
-            username, passwordHash, display_name || username, role
-        );
+        await sql`INSERT INTO users (username, password_hash, display_name, role) 
+                  VALUES (${username}, ${passwordHash}, ${display_name || username}, ${role})`;
 
         return NextResponse.json({ success: true }, { status: 201 });
     } catch (error) {

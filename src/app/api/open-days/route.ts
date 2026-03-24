@@ -3,9 +3,9 @@ import getDb from '@/lib/db';
 
 export async function GET() {
     try {
-        const db = getDb();
-        const days = db.prepare('SELECT * FROM open_days ORDER BY day_of_week').all();
-        return NextResponse.json(days, {
+        const sql = await getDb();
+        const rows = await sql`SELECT * FROM open_days ORDER BY day_of_week`;
+        return NextResponse.json(rows, {
             headers: { 'Cache-Control': 'no-store, max-age=0' }
         });
     } catch (error) {
@@ -22,18 +22,38 @@ export async function PUT(request: Request) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
 
-        const body = await request.json();
-        const db = getDb();
+        const body = (await request.json()) as any[];
+        if (!Array.isArray(body)) {
+            return NextResponse.json({ error: 'Body must be an array' }, { status: 400 });
+        }
 
-        const update = db.prepare(
-            'UPDATE open_days SET open_time = ?, close_time = ?, is_active = ? WHERE day_of_week = ?'
-        );
-        const updateMany = db.transaction((days: { day_of_week: number; open_time: string; close_time: string; is_active: number }[]) => {
-            for (const day of days) {
-                update.run(day.open_time, day.close_time, day.is_active, day.day_of_week);
+        const timeRegex = /^([01]\d|2[0-3]):[0-5]\d$/;
+        for (const day of body) {
+            if (typeof day.day_of_week !== 'number' || day.day_of_week < 0 || day.day_of_week > 6) {
+                return NextResponse.json({ error: 'Invalid day_of_week' }, { status: 400 });
             }
-        });
-        updateMany(body);
+            if (!timeRegex.test(day.open_time) || !timeRegex.test(day.close_time)) {
+                return NextResponse.json({ error: 'Invalid time format (HH:MM)' }, { status: 400 });
+            }
+            if (typeof day.is_active !== 'boolean' && day.is_active !== 0 && day.is_active !== 1) {
+                return NextResponse.json({ error: 'Invalid is_active status' }, { status: 400 });
+            }
+        }
+
+        const sql = await getDb();
+        if (body.length > 0) {
+            await sql.begin(async (t: any) => {
+                for (const day of body) {
+                    const isActive = day.is_active === true || day.is_active === 1;
+                    const result = await t`UPDATE open_days 
+                                           SET open_time = ${day.open_time}, close_time = ${day.close_time}, is_active = ${isActive} 
+                                           WHERE day_of_week = ${day.day_of_week}`;
+                    if (result.count === 0) {
+                        throw new Error(`Day ${day.day_of_week} not found in database`);
+                    }
+                }
+            });
+        }
 
         return NextResponse.json({ success: true });
     } catch (error) {

@@ -11,10 +11,11 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ error: 'Invalid date format' }, { status: 400 });
         }
 
-        const db = getDb();
+        const sql = await getDb();
 
         // Check for special closure
-        const closure = db.prepare('SELECT * FROM special_closures WHERE date = ?').get(date);
+        const closures = await sql`SELECT * FROM special_closures WHERE date = ${date}`;
+        const closure = closures[0];
         if (closure) {
             return NextResponse.json({ closed: true, reason: 'Special closure', slots: [] });
         }
@@ -23,7 +24,8 @@ export async function GET(request: NextRequest) {
         const dayOfWeek = new Date(date + 'T00:00:00').getDay();
 
         // Get open day info
-        const openDay = db.prepare('SELECT * FROM open_days WHERE day_of_week = ?').get(dayOfWeek) as {
+        const openDays = await sql`SELECT * FROM open_days WHERE day_of_week = ${dayOfWeek}`;
+        const openDay = openDays[0] as {
             open_time: string;
             close_time: string;
             is_active: number;
@@ -34,9 +36,7 @@ export async function GET(request: NextRequest) {
         }
 
         // Get settings for cutoff and interval
-        const settingsRows = db.prepare('SELECT key, value FROM settings WHERE key IN (?, ?, ?)').all(
-            'booking_cutoff_minutes', 'time_slot_interval', 'max_capacity'
-        ) as { key: string; value: string }[];
+        const settingsRows = await sql`SELECT key, value FROM settings WHERE key IN ('booking_cutoff_minutes', 'time_slot_interval', 'max_capacity')`;
 
         const settings: Record<string, string> = {};
         for (const row of settingsRows) {
@@ -51,13 +51,11 @@ export async function GET(request: NextRequest) {
         const slots = generateTimeSlots(openDay.open_time, openDay.close_time, interval, cutoff);
 
         // Get existing reservations for this date
-        const reservations = db.prepare(
-            'SELECT time_slot, SUM(guests_count) as total_guests FROM reservations WHERE date = ? AND status != ? GROUP BY time_slot'
-        ).all(date, 'cancelled') as { time_slot: string; total_guests: number }[];
+        const reservations = await sql`SELECT time_slot, SUM(guests_count) as total_guests FROM reservations WHERE date = ${date} AND status != 'cancelled' GROUP BY time_slot`;
 
         const reservationMap: Record<string, number> = {};
         for (const r of reservations) {
-            reservationMap[r.time_slot] = r.total_guests;
+            reservationMap[r.time_slot] = Number(r.total_guests);
         }
 
         // Build availability

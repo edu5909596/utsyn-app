@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import getDb from '@/lib/db';
 
 export async function DELETE(
-    request: NextRequest,
+    _request: NextRequest,
     { params }: { params: Promise<{ id: string }> }
 ) {
     try {
@@ -13,8 +13,8 @@ export async function DELETE(
         }
 
         const { id } = await params;
-        const db = getDb();
-        db.prepare('DELETE FROM menu_categories WHERE id = ?').run(id);
+        const sql = await getDb();
+        await sql`DELETE FROM menu_categories WHERE id = ${id}`;
 
         return NextResponse.json({ success: true });
     } catch (error) {

@@ -35,31 +35,17 @@ export async function GET(request: NextRequest) {
         const from = searchParams.get('from');
         const to = searchParams.get('to');
 
-        const db = getDb();
-        let query = 'SELECT * FROM reservations WHERE 1=1';
-        const params: (string | number)[] = [];
-
-        if (date) {
-            query += ' AND date = ?';
-            params.push(date);
-        }
-        if (status && status !== 'all') {
-            query += ' AND status = ?';
-            params.push(status);
-        }
-        if (from) {
-            query += ' AND date >= ?';
-            params.push(from);
-        }
-        if (to) {
-            query += ' AND date <= ?';
-            params.push(to);
-        }
-
-        query += ' ORDER BY date DESC, time_slot ASC';
-
-        const reservations = db.prepare(query).all(...params);
-        return NextResponse.json(reservations);
+        const sql = await getDb();
+        const result = await sql`
+            SELECT * FROM reservations 
+            WHERE 1=1
+            ${date ? sql`AND date = ${date}` : sql``}
+            ${status && status !== 'all' ? sql`AND status = ${status}` : sql``}
+            ${from ? sql`AND date >= ${from}` : sql``}
+            ${to ? sql`AND date <= ${to}` : sql``}
+            ORDER BY date DESC, time_slot ASC
+        `;
+        return NextResponse.json(result);
     } catch (error) {
         console.error('Reservations GET error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -97,61 +83,60 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Invalid time slot' }, { status: 400 });
         }
 
-        const db = getDb();
+        const sql = await getDb();
 
         // Check if date is open
         const dayOfWeek = new Date(date + 'T00:00:00').getDay();
-        const openDay = db.prepare('SELECT * FROM open_days WHERE day_of_week = ? AND is_active = 1').get(dayOfWeek);
+        const openDays = await sql`SELECT * FROM open_days WHERE day_of_week = ${dayOfWeek} AND is_active = 1`;
+        const openDay = openDays[0];
         if (!openDay) {
             return NextResponse.json({ error: 'Restaurant is closed this day' }, { status: 400 });
         }
 
         // Check for special closure
-        const closure = db.prepare('SELECT * FROM special_closures WHERE date = ?').get(date);
+        const closures = await sql`SELECT * FROM special_closures WHERE date = ${date}`;
+        const closure = closures[0];
         if (closure) {
             return NextResponse.json({ error: 'Restaurant is closed this day (special closure)' }, { status: 400 });
         }
 
         // Check capacity
-        const maxCapacityRow = db.prepare('SELECT value FROM settings WHERE key = ?').get('max_capacity') as { value: string } | undefined;
+        const maxCapacityRows = await sql`SELECT value FROM settings WHERE key = 'max_capacity'`;
+        const maxCapacityRow = maxCapacityRows[0] as { value: string } | undefined;
         const maxCapacity = parseInt(maxCapacityRow?.value || '60');
 
-        const existingTotal = db.prepare(
-            'SELECT COALESCE(SUM(guests_count), 0) as total FROM reservations WHERE date = ? AND time_slot = ? AND status != ?'
-        ).get(date, time_slot, 'cancelled') as { total: number };
+        const existingTotalRows = await sql`
+            SELECT COALESCE(SUM(guests_count), 0) as total 
+            FROM reservations 
+            WHERE date = ${date} AND time_slot = ${time_slot} AND status != 'cancelled'
+        `;
+        const existingTotal = existingTotalRows[0] as { total: number | string };
 
-        if (existingTotal.total + guests_count > maxCapacity) {
+        if (Number(existingTotal.total) + guests_count > maxCapacity) {
             return NextResponse.json({ error: 'Not enough capacity for this time slot' }, { status: 400 });
         }
 
         // Generate unique confirmation code
-        let confirmationCode: string;
+        let confirmationCode: string = '';
         let attempts = 0;
         do {
             confirmationCode = generateConfirmationCode();
-            const existing = db.prepare('SELECT id FROM reservations WHERE confirmation_code = ?').get(confirmationCode);
-            if (!existing) break;
+            const existingCodes = await sql`SELECT id FROM reservations WHERE confirmation_code = ${confirmationCode}`;
+            if (existingCodes.length === 0) break;
             attempts++;
         } while (attempts < 10);
 
-        // Insert reservation with 'needs_seat' status - admin must assign tables and confirm
-        const result = db.prepare(`
-      INSERT INTO reservations (guest_name, phone, email, guests_count, date, time_slot, comment, status, confirmation_code)
-      VALUES (?, ?, ?, ?, ?, ?, ?, 'needs_seat', ?)
-    `).run(
-            sanitizeInput(guest_name),
-            sanitizeInput(phone),
-            sanitizeInput(email || ''),
-            guests_count,
-            date,
-            time_slot,
-            sanitizeInput(comment || ''),
-            confirmationCode
-        );
+        // Insert reservation with 'needs_seat' status
+        const [newRes] = await sql`
+            INSERT INTO reservations (guest_name, phone, email, guests_count, date, time_slot, comment, status, confirmation_code)
+            VALUES (${sanitizeInput(guest_name)}, ${sanitizeInput(phone)}, ${sanitizeInput(email || '')}, ${guests_count}, ${date}, ${time_slot}, ${sanitizeInput(comment || '')}, 'needs_seat', ${confirmationCode})
+            RETURNING id
+        `;
 
         // SMS notification for received booking (if configured)
         try {
-            const templateRow = db.prepare('SELECT value FROM settings WHERE key = ?').get('sms_template_received') as { value: string } | undefined;
+            const templates = await sql`SELECT value FROM settings WHERE key = 'sms_template_received'`;
+            const templateRow = templates[0] as { value: string } | undefined;
             if (templateRow?.value) {
                 let message = templateRow.value;
                 message = message.replace(/{kode}/g, confirmationCode || '');
@@ -168,7 +153,7 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json({
             success: true,
-            id: result.lastInsertRowid,
+            id: Number(newRes.id),
             confirmation_code: confirmationCode,
         }, { status: 201 });
     } catch (error) {

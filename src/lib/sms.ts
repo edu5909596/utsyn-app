@@ -4,22 +4,26 @@ export async function sendSms(phone: string, message: string) {
     if (!phone || !message) return false;
     
     try {
-        const db = getDb();
-        const providerRow = db.prepare('SELECT value FROM settings WHERE key = ?').get('sms_provider') as { value: string } | undefined;
-        const provider = providerRow?.value || 'webhook';
+        const sql = await getDb();
+        const settingsRows = await sql`SELECT key, value FROM settings WHERE key IN ('sms_provider', 'sms_twilio_sid', 'sms_twilio_token', 'sms_twilio_from', 'sms_webhook_url')`;
+        const settings: Record<string, string> = {};
+        for (const row of settingsRows) {
+            settings[row.key] = row.value;
+        }
+
+        const provider = settings['sms_provider'] || 'webhook';
 
         if (provider === 'twilio') {
-            const sidRow = db.prepare('SELECT value FROM settings WHERE key = ?').get('sms_twilio_sid') as { value: string } | undefined;
-            const tokenRow = db.prepare('SELECT value FROM settings WHERE key = ?').get('sms_twilio_token') as { value: string } | undefined;
-            const fromRow = db.prepare('SELECT value FROM settings WHERE key = ?').get('sms_twilio_from') as { value: string } | undefined;
+            const sid = settings['sms_twilio_sid'];
+            const token = settings['sms_twilio_token'];
+            const from = settings['sms_twilio_from'];
 
-            if (sidRow?.value && tokenRow?.value && fromRow?.value) {
-                const url = `https://api.twilio.com/2010-04-01/Accounts/${sidRow.value}/Messages.json`;
-                // Buffer.from is available in Node.js
-                const auth = Buffer.from(`${sidRow.value}:${tokenRow.value}`).toString('base64');
+            if (sid && token && from) {
+                const url = `https://api.twilio.com/2010-04-01/Accounts/${sid}/Messages.json`;
+                const auth = Buffer.from(`${sid}:${token}`).toString('base64');
                 const formData = new URLSearchParams();
                 formData.append('To', phone);
-                formData.append('From', fromRow.value);
+                formData.append('From', from);
                 formData.append('Body', message);
 
                 const res = await fetch(url, {
@@ -38,7 +42,8 @@ export async function sendSms(phone: string, message: string) {
                 return true;
             }
         } else if (provider === 'webhook') {
-            const webhookRow = db.prepare('SELECT value FROM settings WHERE key = ?').get('sms_webhook_url') as { value: string } | undefined;
+            const webhookRows = await sql`SELECT value FROM settings WHERE key = 'sms_webhook_url'`;
+            const webhookRow = webhookRows[0] as { value: string } | undefined;
             if (webhookRow?.value) {
                 const res = await fetch(webhookRow.value, {
                     method: 'POST',

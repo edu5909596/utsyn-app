@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import postgres from 'postgres';
 import getDb from '@/lib/db';
 
 export async function PATCH(
@@ -21,10 +22,10 @@ export async function PATCH(
             return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
         }
 
-        const db = getDb();
-        const result = db.prepare('UPDATE reservations SET status = ? WHERE id = ?').run(status, id);
+        const sql = await getDb();
+        const result = await sql`UPDATE reservations SET status = ${status} WHERE id = ${id}`;
 
-        if (result.changes === 0) {
+        if (result.count === 0) {
             return NextResponse.json({ error: 'Reservation not found' }, { status: 404 });
         }
 
@@ -47,15 +48,17 @@ export async function DELETE(
         }
 
         const { id } = await params;
-        const db = getDb();
+        const sql = await getDb();
         
-        // Remove assignments first
-        db.prepare('DELETE FROM table_assignments WHERE reservation_id = ?').run(id);
-        
-        // Remove reservation entirely
-        const result = db.prepare('DELETE FROM reservations WHERE id = ?').run(id);
+        // Remove assignments and reservation in a transaction
+        let affected = 0;
+        await sql.begin(async (t: any) => {
+            await t`DELETE FROM table_assignments WHERE reservation_id = ${id}`;
+            const res = await t`DELETE FROM reservations WHERE id = ${id}`;
+            affected = res.count;
+        });
 
-        if (result.changes === 0) {
+        if (affected === 0) {
             return NextResponse.json({ error: 'Reservation not found' }, { status: 404 });
         }
 

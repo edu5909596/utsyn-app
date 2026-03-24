@@ -22,11 +22,18 @@ function HomePage() {
   const [menuCategories, setMenuCategories] = useState<any[]>([]);
 
   useEffect(() => {
-    fetch('/api/settings', { cache: 'no-store' }).then(r => r.json()).then(setSettings).catch(console.error);
-    fetch('/api/open-days', { cache: 'no-store' }).then(r => r.json()).then(setOpenDays).catch(console.error);
-    fetch('/api/menu', { cache: 'no-store' }).then(r => r.json()).then(data => {
-      if (Array.isArray(data)) setMenuCategories(data);
-    }).catch(console.error);
+    fetch('/api/settings', { cache: 'no-store' })
+      .then(r => r.json())
+      .then(data => { if (data && !data.error) setSettings(data); })
+      .catch(console.error);
+    fetch('/api/open-days', { cache: 'no-store' })
+      .then(r => r.json())
+      .then(data => { if (Array.isArray(data)) setOpenDays(data); })
+      .catch(console.error);
+    fetch('/api/menu', { cache: 'no-store' })
+      .then(r => r.json())
+      .then(data => { if (Array.isArray(data)) setMenuCategories(data); })
+      .catch(console.error);
   }, []);
 
   const dayNames = [
@@ -63,7 +70,7 @@ function HomePage() {
               <h3>{t('info_hours_title')}</h3>
               <table className="hours-table" role="table" aria-label={t('info_hours_title')}>
                 <tbody>
-                  {openDays.map(day => (
+                  {Array.isArray(openDays) && openDays.map(day => (
                     <tr key={day.day_of_week} className={day.is_active ? 'open' : 'closed'}>
                       <td>{dayNames[day.day_of_week]}</td>
                       <td>
@@ -83,12 +90,12 @@ function HomePage() {
               <div className="card-icon" aria-hidden="true"><IconClipboard size={24} /></div>
               <h3>{locale === 'no' ? 'Meny' : 'Menu'}</h3>
               <div style={{ marginTop: 'var(--space-md)' }}>
-                {menuCategories.map(category => (
+                {Array.isArray(menuCategories) && menuCategories.map(category => (
                   <div key={category.id} style={{ marginBottom: 'var(--space-md)' }}>
                     <h4 style={{ fontSize: 'var(--font-size-sm)', textTransform: 'uppercase', color: 'var(--color-text-muted)', marginBottom: 'var(--space-xs)' }}>
                       {locale === 'no' ? category.name_no : category.name_en}
                     </h4>
-                    {category.items.filter((item: any) => item.is_active).map((item: any) => (
+                    {Array.isArray(category.items) && category.items.filter((item: any) => item.is_active).map((item: any) => (
                       <div key={item.id} className="price-item" style={{ borderBottom: '1px solid var(--color-border-light)', paddingBottom: 'var(--space-xs)', marginBottom: 'var(--space-xs)', flexWrap: 'wrap' }}>
                         <div style={{ flex: 1 }}>
                           <div style={{ fontWeight: 'var(--font-weight-medium)' }}>
@@ -107,7 +114,7 @@ function HomePage() {
                     ))}
                   </div>
                 ))}
-                {menuCategories.length === 0 && (
+                {(!Array.isArray(menuCategories) || menuCategories.length === 0) && (
                   <div className="price-item">
                     <span>Meny laster...</span>
                   </div>

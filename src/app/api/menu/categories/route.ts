@@ -16,12 +16,12 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
 
-        const db = getDb();
-        const info = db.prepare('INSERT INTO menu_categories (name_no, name_en, sort_order) VALUES (?, ?, ?)').run(
-            name_no, name_en, sort_order || 0
-        );
+        const sql = await getDb();
+        const [newCat] = await sql`INSERT INTO menu_categories (name_no, name_en, sort_order) 
+                                   VALUES (${name_no}, ${name_en}, ${sort_order || 0})
+                                   RETURNING id`;
 
-        return NextResponse.json({ success: true, id: info.lastInsertRowid });
+        return NextResponse.json({ success: true, id: Number(newCat.id) });
     } catch (error) {
         console.error('Menu category POST error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

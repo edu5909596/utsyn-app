@@ -4,9 +4,10 @@ import { hashPassword } from '@/lib/auth';
 
 export async function GET() {
     try {
-        const db = getDb();
-        const count = db.prepare('SELECT COUNT(*) as count FROM users').get() as { count: number };
-        return NextResponse.json({ needsSetup: count.count === 0 });
+        const sql = await getDb();
+        const result = await sql`SELECT COUNT(*) as count FROM users`;
+        const count = result[0] as { count: string | number };
+        return NextResponse.json({ needsSetup: Number(count.count) === 0 });
     } catch (error) {
         console.error('Setup GET error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
@@ -15,10 +16,11 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
     try {
-        const db = getDb();
-        const count = db.prepare('SELECT COUNT(*) as count FROM users').get() as { count: number };
+        const sql = await getDb();
+        const checkResult = await sql`SELECT COUNT(*) as count FROM users`;
+        const count = checkResult[0] as { count: string | number };
 
-        if (count.count > 0) {
+        if (Number(count.count) > 0) {
             return NextResponse.json({ error: 'Setup already completed' }, { status: 400 });
         }
 
@@ -33,9 +35,8 @@ export async function POST(request: NextRequest) {
         }
 
         const passwordHash = await hashPassword(password);
-        db.prepare('INSERT INTO users (username, password_hash, display_name, role) VALUES (?, ?, ?, ?)').run(
-            username, passwordHash, display_name || 'Administrator', 'admin'
-        );
+        await sql`INSERT INTO users (username, password_hash, display_name, role) 
+                  VALUES (${username}, ${passwordHash}, ${display_name || 'Administrator'}, 'admin')`;
 
         return NextResponse.json({ success: true }, { status: 201 });
     } catch (error) {

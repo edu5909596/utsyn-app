@@ -3,8 +3,8 @@ import getDb from '@/lib/db';
 
 export async function GET() {
     try {
-        const db = getDb();
-        const rows = db.prepare('SELECT key, value FROM settings').all() as { key: string; value: string }[];
+        const sql = await getDb();
+        const rows = await sql`SELECT key, value FROM settings`;
         const settings: Record<string, string> = {};
         for (const row of rows) {
             settings[row.key] = row.value;
@@ -58,15 +58,16 @@ export async function PUT(request: Request) {
             filteredEntries.push([key, stringValue]);
         }
 
-        const db = getDb();
-        const update = db.prepare('INSERT OR REPLACE INTO settings (key, value, updated_at) VALUES (?, ?, CURRENT_TIMESTAMP)');
-        const updateMany = db.transaction((entries: [string, string][]) => {
-            for (const [key, value] of entries) {
-                update.run(key, value);
-            }
-        });
-        
-        updateMany(filteredEntries);
+        const sql = await getDb();
+        if (filteredEntries.length > 0) {
+            await sql.begin(async (t: any) => {
+                for (const [key, value] of filteredEntries) {
+                    await t`INSERT INTO settings (key, value, updated_at) 
+                           VALUES (${key}, ${value}, CURRENT_TIMESTAMP)
+                           ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = CURRENT_TIMESTAMP`;
+                }
+            });
+        }
 
         return NextResponse.json({ success: true });
     } catch (error) {

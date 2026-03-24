@@ -16,10 +16,11 @@ export async function PUT(
         const body = await request.json();
         const { name_no, name_en, desc_no, desc_en, price, is_active } = body;
 
-        const db = getDb();
-        db.prepare('UPDATE menu_items SET name_no = ?, name_en = ?, desc_no = ?, desc_en = ?, price = ?, is_active = ? WHERE id = ?').run(
-            name_no, name_en, desc_no, desc_en, price, is_active ? 1 : 0, id
-        );
+        const sql = await getDb();
+        const isActive = is_active === true || is_active === 1;
+        await sql`UPDATE menu_items 
+                  SET name_no = ${name_no}, name_en = ${name_en}, desc_no = ${desc_no}, desc_en = ${desc_en}, price = ${price}, is_active = ${isActive} 
+                  WHERE id = ${id}`;
 
         return NextResponse.json({ success: true });
     } catch (error) {
@@ -40,8 +41,8 @@ export async function DELETE(
         }
 
         const { id } = await params;
-        const db = getDb();
-        db.prepare('DELETE FROM menu_items WHERE id = ?').run(id);
+        const sql = await getDb();
+        await sql`DELETE FROM menu_items WHERE id = ${id}`;
 
         return NextResponse.json({ success: true });
     } catch (error) {

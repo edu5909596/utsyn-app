@@ -3,20 +3,21 @@ import getDb from '@/lib/db';
 
 export async function GET() {
     try {
-        const db = getDb();
-        const categories = db.prepare('SELECT * FROM menu_categories ORDER BY sort_order').all() as any[];
-        const items = db.prepare('SELECT * FROM menu_items').all() as any[];
-
+        const sql = await getDb();
+        const categories = await sql`SELECT * FROM menu_categories ORDER BY sort_order`;
+        const items = await sql`SELECT * FROM menu_items`;
+        
         const itemsByCategory = new Map<number, any[]>();
         for (const item of items) {
-            const list = itemsByCategory.get(item.category_id) || [];
+            const catId = Number(item.category_id);
+            const list = itemsByCategory.get(catId) || [];
             list.push(item);
-            itemsByCategory.set(item.category_id, list);
+            itemsByCategory.set(catId, list);
         }
 
         const menuWithItems = categories.map(cat => ({
             ...cat,
-            items: itemsByCategory.get(cat.id) || []
+            items: itemsByCategory.get(Number(cat.id)) || []
         }));
 
         return NextResponse.json(menuWithItems, {
@@ -46,12 +47,18 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
 
-        const db = getDb();
-        const info = db.prepare('INSERT INTO menu_items (category_id, name_no, name_en, desc_no, desc_en, price, is_active) VALUES (?, ?, ?, ?, ?, ?, ?)').run(
-            category_id, name_no, name_en, desc_no, desc_en, price, is_active ? 1 : 0
-        );
+        const sql = await getDb();
+        const isActive = is_active === true || is_active === 1;
+        const rows = await sql`INSERT INTO menu_items (category_id, name_no, name_en, desc_no, desc_en, price, is_active) 
+                                   VALUES (${category_id}, ${name_no}, ${name_en}, ${desc_no}, ${desc_en}, ${price}, ${isActive})
+                                   RETURNING id`;
+        
+        const newItem = rows[0];
+        if (!newItem) {
+            return NextResponse.json({ success: false, error: 'Insert failed' }, { status: 500 });
+        }
 
-        return NextResponse.json({ success: true, id: info.lastInsertRowid });
+        return NextResponse.json({ success: true, id: Number(newItem.id) });
     } catch (error) {
         console.error('Menu POST error:', error);
         return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
