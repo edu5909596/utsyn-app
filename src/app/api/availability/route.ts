@@ -28,10 +28,13 @@ export async function GET(request: NextRequest) {
         const openDay = openDays[0] as {
             open_time: string;
             close_time: string;
-            is_active: number;
+            time_slots?: string;
+            is_active: boolean | number;
         } | undefined;
 
-        if (!openDay || !openDay.is_active) {
+        const isActive = openDay?.is_active === true || openDay?.is_active === 1;
+
+        if (!openDay || !isActive) {
             return NextResponse.json({ closed: true, reason: 'Not open this day', slots: [] });
         }
 
@@ -48,7 +51,12 @@ export async function GET(request: NextRequest) {
         const maxCapacity = parseInt(settings.max_capacity || '60');
 
         // Generate time slots
-        const slots = generateTimeSlots(openDay.open_time, openDay.close_time, interval, cutoff);
+        let slots: string[] = [];
+        if (openDay.time_slots && openDay.time_slots.trim().length > 0) {
+            slots = openDay.time_slots.split(',').map(s => s.trim()).filter(s => s.length > 0);
+        } else {
+            slots = generateTimeSlots(openDay.open_time, openDay.close_time, interval, cutoff);
+        }
 
         // Get existing reservations for this date
         const reservations = await sql`SELECT time_slot, SUM(guests_count) as total_guests FROM reservations WHERE date = ${date} AND status != 'cancelled' GROUP BY time_slot`;

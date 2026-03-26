@@ -6,8 +6,9 @@ interface OpenDay {
   id: number;
   day_of_week: number;
   open_time: string;
-  close_time: string;
-  is_active: boolean;
+    close_time: string;
+    time_slots?: string;
+    is_active: boolean;
 }
 
 interface Closure {
@@ -239,6 +240,9 @@ export default function InnstillingerPage() {
       {/* Opening Hours */}
       <div className="admin-form-section">
         <h3>Åpningstider</h3>
+        <p style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--font-size-sm)', marginBottom: 'var(--space-lg)' }}>
+          Standard genererer tider basert på Fra/Til og intervall i innstillinger. For å bestemme eksakte tidspunkt gjestene kan velge, fyll inn <strong>Spesifikke tidspunkt</strong> (tider separert med komma, f.eks: 17:00, 18:00, 19:30). Dette overstyrer genereringen.
+        </p>
         <div className="admin-table-container" style={{ marginBottom: 'var(--space-lg)' }}>
           <table className="admin-table">
             <thead>
@@ -247,6 +251,7 @@ export default function InnstillingerPage() {
                 <th>Åpent</th>
                 <th>Fra</th>
                 <th>Til</th>
+                <th>Spesifikke tidspunkt (overstyrer)</th>
               </tr>
             </thead>
             <tbody>
@@ -282,6 +287,16 @@ export default function InnstillingerPage() {
                       onChange={e => updateOpenDay(day.day_of_week, 'close_time', e.target.value)}
                       disabled={!day.is_active}
                       style={{ width: '130px' }}
+                    />
+                  </td>
+                  <td>
+                    <input
+                      type="text"
+                      className="form-input"
+                      value={day.time_slots || ''}
+                      onChange={e => updateOpenDay(day.day_of_week, 'time_slots', e.target.value)}
+                      placeholder="17:00, 18:00, 19:30"
+                      disabled={!day.is_active}
                     />
                   </td>
                 </tr>

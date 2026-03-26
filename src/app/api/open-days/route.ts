@@ -38,6 +38,9 @@ export async function PUT(request: Request) {
             if (typeof day.is_active !== 'boolean' && day.is_active !== 0 && day.is_active !== 1) {
                 return NextResponse.json({ error: 'Invalid is_active status' }, { status: 400 });
             }
+            if (day.time_slots !== undefined && typeof day.time_slots !== 'string') {
+                return NextResponse.json({ error: 'Invalid time_slots format' }, { status: 400 });
+            }
         }
 
         const sql = await getDb();
@@ -45,8 +48,9 @@ export async function PUT(request: Request) {
             await sql.begin(async (t: any) => {
                 for (const day of body) {
                     const isActive = day.is_active === true || day.is_active === 1;
+                    const timeSlots = day.time_slots !== undefined ? day.time_slots : '';
                     const result = await t`UPDATE open_days 
-                                           SET open_time = ${day.open_time}, close_time = ${day.close_time}, is_active = ${isActive} 
+                                           SET open_time = ${day.open_time}, close_time = ${day.close_time}, is_active = ${isActive}, time_slots = ${timeSlots} 
                                            WHERE day_of_week = ${day.day_of_week}`;
                     if (result.count === 0) {
                         throw new Error(`Day ${day.day_of_week} not found in database`);

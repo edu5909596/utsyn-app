@@ -10,7 +10,7 @@ import { IconCheck, IconArrowLeft } from '@/components/Icons';
 
 interface OpenDay {
     day_of_week: number;
-    is_active: number;
+    is_active: number | boolean;
 }
 
 interface TimeSlot {
@@ -96,7 +96,7 @@ function BookingWizard() {
 
     const isOpenDay = (dayOfWeek: number) => {
         const od = openDays.find(d => d.day_of_week === dayOfWeek);
-        return od?.is_active === 1;
+        return od?.is_active === 1 || od?.is_active === true;
     };
 
     const isWeekend = (dayOfWeek: number) => dayOfWeek === 0 || dayOfWeek === 6;

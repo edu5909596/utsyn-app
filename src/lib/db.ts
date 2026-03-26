@@ -39,9 +39,16 @@ export async function initializeDatabase() {
       day_of_week INTEGER NOT NULL CHECK(day_of_week BETWEEN 0 AND 6),
       open_time TEXT NOT NULL,
       close_time TEXT NOT NULL,
+      time_slots TEXT DEFAULT '',
       is_active BOOLEAN NOT NULL DEFAULT TRUE,
       UNIQUE(day_of_week)
     )`;
+
+    try {
+      await sql`ALTER TABLE open_days ADD COLUMN IF NOT EXISTS time_slots TEXT DEFAULT ''`;
+    } catch (e) {
+      console.warn('time_slots column already exists or err:', e);
+    }
 
     await sql`CREATE TABLE IF NOT EXISTS special_closures (
       id SERIAL PRIMARY KEY,
