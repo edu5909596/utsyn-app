@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
 
         // Check if date is open
         const dayOfWeek = new Date(date + 'T00:00:00').getDay();
-        const openDays = await sql`SELECT * FROM open_days WHERE day_of_week = ${dayOfWeek} AND is_active = 1`;
+        const openDays = await sql`SELECT * FROM open_days WHERE day_of_week = ${dayOfWeek} AND is_active = true`;
         const openDay = openDays[0];
         if (!openDay) {
             return NextResponse.json({ error: 'Restaurant is closed this day' }, { status: 400 });

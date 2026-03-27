@@ -98,16 +98,40 @@
   --font-scale: 1;
 }
 
-/* High Contrast Mode */
+/* High Contrast / Dark Mode */
 [data-contrast="high"] {
-  --color-text: #000000;
-  --color-text-secondary: #333333;
-  --color-bg: #FFFFFF;
-  --color-bg-alt: #F0F0F0;
-  --color-border: #000000;
-  --color-primary: #4a90e2; /* deeper but still blue */
-  --shadow-sm: 0 0 0 1px #000;
-  --shadow-md: 0 0 0 2px #000;
+  --color-primary: #ffd700;
+  --color-primary-light: #ffeb73;
+  --color-primary-dark: #ccac00;
+  --color-primary-50: #1a1a1a;
+  --color-primary-100: #333333;
+  --color-primary-200: #4d4d4d;
+  
+  --color-accent: #00ffcc;
+  --color-accent-light: #66ffdb;
+  --color-accent-dark: #00ccaa;
+
+  --color-bg: #000000;
+  --color-bg-alt: #1a1a1a;
+  --color-bg-card: #000000;
+  --color-bg-elevated: #1a1a1a;
+
+  --color-text: #ffffff;
+  --color-text-secondary: #dddddd;
+  --color-text-muted: #aaaaaa;
+  --color-text-inverse: #000000;
+
+  --color-border: #ffffff;
+  --color-border-light: #666666;
+
+  --color-success: #00ff88;
+  --color-warning: #ffcc00;
+  --color-error: #ff5555;
+  --color-info: #55ccff;
+
+  --shadow-sm: 0 0 0 1px #ffffff;
+  --shadow-md: 0 0 0 2px #ffffff;
+  --shadow-lg: 0 0 0 3px #ffffff;
 }
 
 /* ===== RESET & BASE ===== */

@@ -29,13 +29,15 @@ export async function POST(request: NextRequest) {
         const body = await request.json();
         const { date, reason_no, reason_en, is_closed = true, time_slots = '' } = body;
 
+        const isClosedBool = is_closed === true || is_closed === 1 || is_closed === 'true';
+
         if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
             return NextResponse.json({ error: 'Invalid date' }, { status: 400 });
         }
 
         const sql = await getDb();
         await sql`INSERT INTO special_closures (date, reason_no, reason_en, is_closed, time_slots) 
-                  VALUES (${date}, ${reason_no || ''}, ${reason_en || ''}, ${is_closed}, ${time_slots}) 
+                  VALUES (${date}, ${reason_no || ''}, ${reason_en || ''}, ${isClosedBool}, ${time_slots}) 
                   ON CONFLICT (date) DO UPDATE SET 
                   reason_no = EXCLUDED.reason_no, 
                   reason_en = EXCLUDED.reason_en,
