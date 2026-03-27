@@ -30,9 +30,16 @@ function HomePage() {
       .then(r => r.json())
       .then(data => { if (Array.isArray(data)) setOpenDays(data); })
       .catch(console.error);
-    fetch('/api/menu', { cache: 'no-store' })
+    // Fetch today's daily menu
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    fetch(`/api/menu/daily?date=${todayStr}`, { cache: 'no-store' })
       .then(r => r.json())
-      .then(data => { if (Array.isArray(data)) setMenuCategories(data); })
+      .then(data => {
+        if (data && Array.isArray(data.categories)) {
+          setMenuCategories(data.categories);
+        }
+      })
       .catch(console.error);
   }, []);
 
@@ -88,7 +95,7 @@ function HomePage() {
             {/* Prices / Menu */}
             <div className="card animate-in">
               <div className="card-icon" aria-hidden="true"><IconClipboard size={24} /></div>
-              <h3>{locale === 'no' ? 'Meny' : 'Menu'}</h3>
+              <h3>{t('menu_today')}</h3>
               <div style={{ marginTop: 'var(--space-md)' }}>
                 {Array.isArray(menuCategories) && menuCategories.map(category => (
                   <div key={category.id} style={{ marginBottom: 'var(--space-md)' }}>
@@ -116,7 +123,7 @@ function HomePage() {
                 ))}
                 {(!Array.isArray(menuCategories) || menuCategories.length === 0) && (
                   <div className="price-item">
-                    <span>Meny laster...</span>
+                    <span>{locale === 'no' ? 'Meny laster...' : 'Loading menu...'}</span>
                   </div>
                 )}
               </div>

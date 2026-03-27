@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { IconCheck, IconX, IconTrash } from '@/components/Icons';
+import { IconCheck, IconX, IconTrash, IconCalendar } from '@/components/Icons';
+import { useUser } from '../layout';
 
 interface MenuItem {
     id: number;
@@ -23,6 +24,8 @@ interface MenuCategory {
 }
 
 export default function MenyPage() {
+    const user = useUser();
+    const isAdmin = user?.role === 'admin';
     const [categories, setCategories] = useState<MenuCategory[]>([]);
     const [loading, setLoading] = useState(true);
     const [toast, setToast] = useState('');
@@ -35,6 +38,16 @@ export default function MenyPage() {
         message: '',
         onConfirm: () => {}
     });
+
+    // Daily menu state
+    const [dailyTab, setDailyTab] = useState(false);
+    const [dailyDate, setDailyDate] = useState(() => {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    });
+    const [dailySelectedIds, setDailySelectedIds] = useState<Set<number>>(new Set());
+    const [dailyIsDaySpecific, setDailyIsDaySpecific] = useState(false);
+    const [dailyLoading, setDailyLoading] = useState(false);
 
     const fetchMenu = useCallback(async () => {
         try {
@@ -145,16 +158,220 @@ export default function MenyPage() {
         }
     };
 
+    // Daily menu handlers
+    const fetchDailyMenu = useCallback(async (date: string) => {
+        setDailyLoading(true);
+        try {
+            const res = await fetch(`/api/menu/daily?date=${date}`);
+            const data = await res.json();
+            if (data && data.isDaySpecific) {
+                setDailyIsDaySpecific(true);
+                const ids = new Set<number>();
+                for (const cat of data.categories) {
+                    for (const item of cat.items) {
+                        ids.add(Number(item.id));
+                    }
+                }
+                setDailySelectedIds(ids);
+            } else {
+                setDailyIsDaySpecific(false);
+                setDailySelectedIds(new Set());
+            }
+        } catch (err) {
+            console.error('Error fetching daily menu:', err);
+        } finally {
+            setDailyLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (dailyTab) {
+            fetchDailyMenu(dailyDate);
+        }
+    }, [dailyTab, dailyDate, fetchDailyMenu]);
+
+    const toggleDailyItem = (itemId: number) => {
+        setDailySelectedIds(prev => {
+            const next = new Set(prev);
+            if (next.has(itemId)) {
+                next.delete(itemId);
+            } else {
+                next.add(itemId);
+            }
+            return next;
+        });
+    };
+
+    const saveDailyMenu = async () => {
+        try {
+            const res = await fetch('/api/menu/daily', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ date: dailyDate, item_ids: Array.from(dailySelectedIds) })
+            });
+            if (res.ok) {
+                showToast('Dagsmeny lagret!');
+                setDailyIsDaySpecific(dailySelectedIds.size > 0);
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    const resetDailyMenu = async () => {
+        try {
+            const res = await fetch(`/api/menu/daily?date=${dailyDate}`, { method: 'DELETE' });
+            if (res.ok) {
+                showToast('Dagsmeny tilbakestilt til standard');
+                setDailyIsDaySpecific(false);
+                setDailySelectedIds(new Set());
+            }
+        } catch (err) {
+            console.error(err);
+        }
+    };
+
+    // Get all active items for daily selection
+    const allActiveItems: MenuItem[] = categories.flatMap(c => c.items.filter(i => i.is_active));
+
+    const selectAllItems = () => {
+        setDailySelectedIds(new Set(allActiveItems.map(item => item.id)));
+    };
+
+    const deselectAllItems = () => {
+        setDailySelectedIds(new Set());
+    };
+
     if (loading) return <div className="loading"><div className="spinner" /></div>;
 
     return (
         <>
             <div className="admin-header">
                 <h1 className="admin-title">Meny</h1>
-                <button className="btn btn-primary" onClick={() => setAddingCategory(true)}>+ Ny Kategori</button>
+                <div style={{ display: 'flex', gap: 'var(--space-sm)' }}>
+                    <button
+                        className={`btn ${!dailyTab ? 'btn-primary' : 'btn-ghost'}`}
+                        onClick={() => setDailyTab(false)}
+                    >
+                        Alle retter
+                    </button>
+                    <button
+                        className={`btn ${dailyTab ? 'btn-primary' : 'btn-ghost'}`}
+                        onClick={() => setDailyTab(true)}
+                        style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+                    >
+                        <IconCalendar size={16} /> Dagsmeny
+                    </button>
+                    {!dailyTab && isAdmin && <button className="btn btn-secondary" onClick={() => setAddingCategory(true)}>+ Ny Kategori</button>}
+                </div>
             </div>
 
-            {addingCategory && (
+            {/* Daily menu management tab */}
+            {dailyTab && (
+                <div className="admin-form-section">
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-md)', flexWrap: 'wrap', gap: 'var(--space-md)' }}>
+                        <div>
+                            <h3 style={{ marginBottom: 'var(--space-xs)' }}>Dagsmeny</h3>
+                            <p style={{ color: 'var(--color-text-secondary)', fontSize: 'var(--font-size-sm)' }}>
+                                Velg hvilke retter som skal vises p&aring; en bestemt dato. Hvis ingen retter er valgt, vises alle aktive retter.
+                            </p>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-md)' }}>
+                            <label className="form-label" style={{ marginBottom: 0 }}>Dato:</label>
+                            <input
+                                type="date"
+                                className="form-input"
+                                value={dailyDate}
+                                onChange={e => setDailyDate(e.target.value)}
+                                style={{ width: 'auto', padding: 'var(--space-xs) var(--space-sm)', minHeight: 'auto' }}
+                            />
+                        </div>
+                    </div>
+
+                    {dailyIsDaySpecific && (
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 12px', borderRadius: 'var(--radius-sm)', background: '#d1fae5', color: '#065f46', fontSize: 'var(--font-size-sm)', fontWeight: 600, marginBottom: 'var(--space-md)' }}>
+                            <IconCheck size={14} /> Tilpasset dagsmeny
+                        </div>
+                    )}
+                    {!dailyIsDaySpecific && (
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 12px', borderRadius: 'var(--radius-sm)', background: 'var(--color-bg-alt)', color: 'var(--color-text-secondary)', fontSize: 'var(--font-size-sm)', fontWeight: 600, marginBottom: 'var(--space-md)' }}>
+                            Bruker standardmeny
+                        </div>
+                    )}
+
+                    {dailyLoading ? (
+                        <div className="loading" style={{ padding: 'var(--space-xl)' }}><div className="spinner" /></div>
+                    ) : (
+                        <>
+                            <div style={{ display: 'flex', gap: 'var(--space-sm)', marginBottom: 'var(--space-lg)' }}>
+                                <button className="btn btn-ghost btn-sm" onClick={selectAllItems}>Velg alle</button>
+                                <button className="btn btn-ghost btn-sm" onClick={deselectAllItems}>Fjern alle</button>
+                            </div>
+
+                            {categories.map(cat => {
+                                const activeItems = cat.items.filter(i => i.is_active);
+                                if (activeItems.length === 0) return null;
+                                return (
+                                    <div key={cat.id} style={{ marginBottom: 'var(--space-lg)' }}>
+                                        <h4 style={{ fontSize: 'var(--font-size-sm)', textTransform: 'uppercase', color: 'var(--color-text-muted)', marginBottom: 'var(--space-sm)', letterSpacing: '0.05em' }}>
+                                            {cat.name_no} <span style={{ fontWeight: 400 }}>({cat.name_en})</span>
+                                        </h4>
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 'var(--space-sm)' }}>
+                                            {activeItems.map(item => {
+                                                const isSelected = dailySelectedIds.has(item.id);
+                                                return (
+                                                    <label
+                                                        key={item.id}
+                                                        style={{
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            gap: 'var(--space-sm)',
+                                                            padding: 'var(--space-sm) var(--space-md)',
+                                                            borderRadius: 'var(--radius-md)',
+                                                            border: `2px solid ${isSelected ? 'var(--color-primary)' : 'var(--color-border-light)'}`,
+                                                            background: isSelected ? 'var(--color-primary-50)' : 'var(--color-bg-card)',
+                                                            cursor: 'pointer',
+                                                            transition: 'all var(--transition-fast)'
+                                                        }}
+                                                    >
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={isSelected}
+                                                            onChange={() => toggleDailyItem(item.id)}
+                                                            style={{ width: 18, height: 18, flexShrink: 0 }}
+                                                        />
+                                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                                            <div style={{ fontWeight: 500 }}>{item.name_no}</div>
+                                                            <div style={{ fontSize: 'var(--font-size-xs)', color: 'var(--color-text-muted)' }}>{item.name_en}</div>
+                                                        </div>
+                                                        <div style={{ fontSize: 'var(--font-size-sm)', fontWeight: 600, color: 'var(--color-text-secondary)', flexShrink: 0 }}>
+                                                            {item.price} kr
+                                                        </div>
+                                                    </label>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                );
+                            })}
+
+                            <div style={{ display: 'flex', gap: 'var(--space-md)', marginTop: 'var(--space-xl)', flexWrap: 'wrap' }}>
+                                <button className="btn btn-primary" onClick={saveDailyMenu} disabled={dailySelectedIds.size === 0}>
+                                    Lagre dagsmeny ({dailySelectedIds.size} retter)
+                                </button>
+                                {dailyIsDaySpecific && (
+                                    <button className="btn btn-ghost" onClick={resetDailyMenu}>
+                                        Tilbakestill til standard
+                                    </button>
+                                )}
+                            </div>
+                        </>
+                    )}
+                </div>
+            )}
+
+            {/* Standard menu items list (original tab) */}
+            {!dailyTab && addingCategory && (
                 <div className="admin-form-section">
                     <h3>Ny Kategori</h3>
                     <form onSubmit={handleSaveCategory} className="admin-form-grid">
@@ -174,7 +391,7 @@ export default function MenyPage() {
                 </div>
             )}
 
-            {categories.map(cat => (
+            {!dailyTab && categories.map(cat => (
                 <div key={cat.id} className="admin-form-section" style={{ marginBottom: 'var(--space-xl)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 'var(--space-md)' }}>
                         <h3>{cat.name_no} <span style={{ color: 'var(--color-text-muted)', fontSize: 'var(--font-size-sm)' }}>({cat.name_en})</span></h3>
@@ -182,9 +399,11 @@ export default function MenyPage() {
                             <button className="btn btn-secondary btn-sm" style={{ marginRight: '8px' }} onClick={() => setEditingItem({ category_id: cat.id, is_active: true, price: 0 })}>
                                 + Legg til rett
                             </button>
-                            <button className="btn btn-danger btn-sm" onClick={() => confirmDeleteCategory(cat.id)}>
-                                Slett kategori
-                            </button>
+                            {isAdmin && (
+                                <button className="btn btn-danger btn-sm" onClick={() => confirmDeleteCategory(cat.id)}>
+                                    Slett kategori
+                                </button>
+                            )}
                         </div>
                     </div>
 

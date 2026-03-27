@@ -147,6 +147,20 @@ export const translations = {
         a11y_decrease_font: 'Reduser skriftstørrelse',
         a11y_high_contrast: 'Høy kontrast',
 
+        // Menu
+        menu_today: 'Meny i dag',
+        menu_daily_title: 'Dagens meny',
+        menu_daily_manage: 'Dagsmeny',
+        menu_daily_desc: 'Velg hvilke retter som skal være tilgjengelige på en bestemt dato. Hvis ingen retter er valgt, vises alle aktive retter.',
+        menu_daily_date: 'Dato',
+        menu_daily_save: 'Lagre dagsmeny',
+        menu_daily_saved: 'Dagsmeny lagret!',
+        menu_daily_reset: 'Tilbakestill til standard',
+        menu_daily_reset_done: 'Dagsmeny tilbakestilt til standard',
+        menu_daily_using_default: 'Bruker standardmeny',
+        menu_daily_custom: 'Tilpasset dagsmeny',
+        menu_no_items_today: 'Ingen meny tilgjengelig i dag',
+
         // Footer
         footer_rights: 'Alle rettigheter forbeholdt',
         footer_school: 'Tangen videregående skole',
@@ -296,6 +310,20 @@ export const translations = {
         a11y_increase_font: 'Increase font size',
         a11y_decrease_font: 'Decrease font size',
         a11y_high_contrast: 'High contrast',
+
+        // Menu
+        menu_today: 'Today\'s menu',
+        menu_daily_title: 'Daily menu',
+        menu_daily_manage: 'Daily menu',
+        menu_daily_desc: 'Choose which dishes should be available on a specific date. If no dishes are selected, all active dishes will be shown.',
+        menu_daily_date: 'Date',
+        menu_daily_save: 'Save daily menu',
+        menu_daily_saved: 'Daily menu saved!',
+        menu_daily_reset: 'Reset to default',
+        menu_daily_reset_done: 'Daily menu reset to default',
+        menu_daily_using_default: 'Using default menu',
+        menu_daily_custom: 'Custom daily menu',
+        menu_no_items_today: 'No menu available today',
 
         // Footer
         footer_rights: 'All rights reserved',

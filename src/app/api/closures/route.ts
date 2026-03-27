@@ -25,6 +25,9 @@ export async function POST(request: NextRequest) {
         if (!user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
+        if (user.role !== 'admin') {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        }
 
         const body = await request.json();
         const { date, reason_no, reason_en, is_closed = true, time_slots = '' } = body;

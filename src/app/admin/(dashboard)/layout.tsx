@@ -1,10 +1,13 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, createContext, useContext } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { IconChartBar, IconClipboard, IconSettings, IconUsers, IconLogOut, IconCalendar, IconGrid } from '@/components/Icons';
 import A11yToolbar from '@/components/A11yToolbar';
+
+export const UserContext = createContext<User | null>(null);
+export function useUser() { return useContext(UserContext); }
 
 interface User {
   userId: number;
@@ -96,13 +99,15 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
             <span className="admin-sidebar-link-icon"><IconClipboard size={18} /></span>
             Meny
           </Link>
-          <Link
-            href="/admin/innstillinger"
-            className={`admin-sidebar-link ${isActive('/admin/innstillinger') ? 'active' : ''}`}
-          >
-            <span className="admin-sidebar-link-icon"><IconSettings size={18} /></span>
-            Innstillinger
-          </Link>
+          {user?.role === 'admin' && (
+            <Link
+              href="/admin/innstillinger"
+              className={`admin-sidebar-link ${isActive('/admin/innstillinger') ? 'active' : ''}`}
+            >
+              <span className="admin-sidebar-link-icon"><IconSettings size={18} /></span>
+              Innstillinger
+            </Link>
+          )}
           {user?.role === 'admin' && (
             <Link
               href="/admin/brukere"
@@ -114,7 +119,9 @@ export default function AdminDashboardLayout({ children }: { children: React.Rea
           )}
         </aside>
         <main className="admin-main">
-          {children}
+          <UserContext.Provider value={user}>
+            {children}
+          </UserContext.Provider>
         </main>
       </div>
       <A11yToolbar />

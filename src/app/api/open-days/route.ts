@@ -18,8 +18,11 @@ export async function PUT(request: Request) {
     try {
         const { getAuthUser } = await import('@/lib/auth');
         const user = await getAuthUser();
-        if (!user || (user.role !== 'admin' && user.role !== 'staff')) {
+        if (!user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+        if (user.role !== 'admin') {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 
         const body = (await request.json()) as any[];

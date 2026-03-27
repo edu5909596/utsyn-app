@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
         if (!user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
-        if (user.role !== 'admin') {
+        if (user.role !== 'admin' && user.role !== 'staff') {
             return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 

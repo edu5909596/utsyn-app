@@ -113,6 +113,14 @@ export async function initializeDatabase() {
       is_active BOOLEAN NOT NULL DEFAULT TRUE
     )`;
 
+    await sql`CREATE TABLE IF NOT EXISTS menu_day_items (
+      id SERIAL PRIMARY KEY,
+      date TEXT NOT NULL,
+      menu_item_id INTEGER NOT NULL REFERENCES menu_items(id) ON DELETE CASCADE,
+      UNIQUE(date, menu_item_id)
+    )`;
+    await sql`CREATE INDEX IF NOT EXISTS idx_menu_day_items_date ON menu_day_items(date)`;
+
     // 2. Create Indexes (Postgres syntax same as SQLite mostly)
     await sql`CREATE INDEX IF NOT EXISTS idx_reservations_date ON reservations(date)`;
     await sql`CREATE INDEX IF NOT EXISTS idx_reservations_status ON reservations(status)`;

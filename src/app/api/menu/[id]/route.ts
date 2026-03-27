@@ -8,8 +8,11 @@ export async function PUT(
     try {
         const { getAuthUser } = await import('@/lib/auth');
         const user = await getAuthUser();
-        if (!user || user.role !== 'admin') {
+        if (!user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+        if (user.role !== 'admin' && user.role !== 'staff') {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 
         const { id } = await params;
@@ -36,8 +39,11 @@ export async function DELETE(
     try {
         const { getAuthUser } = await import('@/lib/auth');
         const user = await getAuthUser();
-        if (!user || user.role !== 'admin') {
+        if (!user) {
             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+        }
+        if (user.role !== 'admin' && user.role !== 'staff') {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
         }
 
         const { id } = await params;

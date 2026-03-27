@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { IconCheck, IconX, IconHourglass, IconWrench, IconSave, IconCalendar } from '@/components/Icons';
+import { useUser } from '../layout';
 
 interface Table {
     id: number;
@@ -89,6 +90,8 @@ function saveLayout(positions: Record<number, TablePosition>, mode: 'permanent' 
 }
 
 export default function BordPage() {
+    const user = useUser();
+    const isAdmin = user?.role === 'admin';
     const [tables, setTables] = useState<Table[]>([]);
     const [reservations, setReservations] = useState<Reservation[]>([]);
     const [allReservations, setAllReservations] = useState<Reservation[]>([]);
@@ -517,7 +520,7 @@ export default function BordPage() {
                                     </button>
                                 </>
                             )}
-                            {!editMode && (
+                            {!editMode && isAdmin && (
                                 <button
                                     className="btn btn-ghost btn-sm editor-btn"
                                     onClick={() => setEditMode(true)}
