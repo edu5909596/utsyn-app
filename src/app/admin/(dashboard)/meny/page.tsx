@@ -289,12 +289,12 @@ export default function MenyPage() {
                     </div>
 
                     {dailyIsDaySpecific && (
-                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 12px', borderRadius: 'var(--radius-sm)', background: '#d1fae5', color: '#065f46', fontSize: 'var(--font-size-sm)', fontWeight: 600, marginBottom: 'var(--space-md)' }}>
+                        <div className="status-badge status-confirmed" style={{ marginBottom: 'var(--space-md)', padding: '6px 12px' }}>
                             <IconCheck size={14} /> Tilpasset dagsmeny
                         </div>
                     )}
                     {!dailyIsDaySpecific && (
-                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '4px 12px', borderRadius: 'var(--radius-sm)', background: 'var(--color-bg-alt)', color: 'var(--color-text-secondary)', fontSize: 'var(--font-size-sm)', fontWeight: 600, marginBottom: 'var(--space-md)' }}>
+                        <div className="status-badge" style={{ marginBottom: 'var(--space-md)', padding: '6px 12px', background: 'var(--color-bg-alt)', color: 'var(--color-text-secondary)' }}>
                             Bruker standardmeny
                         </div>
                     )}

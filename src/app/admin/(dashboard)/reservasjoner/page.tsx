@@ -209,11 +209,11 @@ export default function ReservasjonerPage() {
                               <button className="btn btn-success btn-sm" onClick={() => updateStatus(r.id, 'completed')} title="Marker som fullfort" aria-label="Marker som fullfort" style={{ padding: '6px 12px' }}>
                                 <IconCheck size={16} />
                               </button>
-                              <button className="btn btn-sm" onClick={() => updateStatus(r.id, 'cancelled')} title="Kanseller" aria-label="Kanseller" style={{ padding: '6px 12px', backgroundColor: '#b91c1c', color: 'white', border: 'none' }}>
+                              <button className="btn btn-danger btn-sm" onClick={() => updateStatus(r.id, 'cancelled')} title="Kanseller" aria-label="Kanseller" style={{ padding: '6px 14px' }}>
                                 <IconX size={16} />
                               </button>
                             </div>
-                            <button className="btn btn-warning btn-sm" onClick={() => updateStatus(r.id, 'no_show')} title="Ikke møte" aria-label="Ikke møte" style={{ color: 'white', padding: '4px 10px', height: 'auto', fontWeight: 600, fontSize: '12px' }}>
+                            <button className="btn btn-warning btn-sm" onClick={() => updateStatus(r.id, 'no_show')} title="Ikke møte" aria-label="Ikke møte" style={{ padding: '4px 10px', height: 'auto', fontWeight: 600, fontSize: '12px' }}>
                               Ikke møte
                             </button>
                           </>
@@ -226,7 +226,7 @@ export default function ReservasjonerPage() {
                       </div>
 
                       {/* Universal Delete Action */}
-                      <button className="btn btn-sm" onClick={() => confirmDelete(r.id)} title="Slett reservasjon" aria-label="Slett" style={{ backgroundColor: '#dc2626', color: 'white', border: 'none', padding: '10px 14px', borderRadius: 'var(--radius-md)', flexShrink: 0 }}>
+                      <button className="btn btn-danger btn-sm" onClick={() => confirmDelete(r.id)} title="Slett reservasjon" aria-label="Slett" style={{ padding: '10px 14px', borderRadius: 'var(--radius-md)', flexShrink: 0 }}>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                             <path d="M3 6h18"></path>
                             <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>

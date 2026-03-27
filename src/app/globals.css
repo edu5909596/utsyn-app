@@ -129,9 +129,54 @@
   --color-error: #ff5555;
   --color-info: #55ccff;
 
+  --color-weekend: #330000;
+  --color-weekend-text: #ff8888;
+  --color-available: #003300;
+  --color-available-text: #00ff00;
+  --color-full: #330000;
+  --color-full-text: #ff5555;
+
+  /* Status overrides for specific components */
+  --color-status-no-show-bg: #331100;
+  --color-status-no-show-text: #ffaa00;
+
   --shadow-sm: 0 0 0 1px #ffffff;
   --shadow-md: 0 0 0 2px #ffffff;
   --shadow-lg: 0 0 0 3px #ffffff;
+}
+
+/* Ensure status classes use variables */
+[data-contrast="high"] .status-no_show {
+  background: var(--color-status-no-show-bg) !important;
+  color: var(--color-status-no-show-text) !important;
+}
+
+[data-contrast="high"] .status-confirmed,
+[data-contrast="high"] .status-completed {
+  background: var(--color-available) !important;
+  color: var(--color-available-text) !important;
+}
+
+[data-contrast="high"] .status-cancelled {
+  background: var(--color-full) !important;
+  color: var(--color-full-text) !important;
+}
+
+/* Page-specific overrides for High Contrast */
+[data-contrast="high"] .hero {
+  background: #000000 !important;
+  border-bottom: 2px solid var(--color-border);
+}
+
+[data-contrast="high"] .login-page {
+  background: #000000 !important;
+}
+
+[data-contrast="high"] .card,
+[data-contrast="high"] .admin-form-section,
+[data-contrast="high"] .summary-card,
+[data-contrast="high"] .modal-content {
+  border: 2px solid var(--color-border) !important;
 }
 
 /* ===== RESET & BASE ===== */
@@ -456,7 +501,7 @@ body {
 
 .btn-primary {
   background: var(--color-accent);
-  color: #FFFFFF;
+  color: var(--color-text-inverse);
   border-color: var(--color-accent);
 }
 
@@ -483,8 +528,9 @@ body {
 
 .btn-outline {
   background: transparent;
-  color: var(--color-text-inverse);
-  border-color: rgba(255, 255, 255, 0.4);
+  color: inherit;
+  border-color: currentColor;
+  opacity: 0.8;
 }
 
 .btn-outline:hover {
@@ -506,7 +552,7 @@ body {
 
 .btn-danger {
   background: var(--color-error);
-  color: #FFFFFF;
+  color: var(--color-text-inverse);
   border-color: var(--color-error);
 }
 
@@ -516,13 +562,13 @@ body {
 
 .btn-success {
   background: var(--color-success);
-  color: #FFFFFF;
+  color: var(--color-text-inverse);
   border-color: var(--color-success);
 }
 
 .btn-warning {
   background: var(--color-warning);
-  color: #FFFFFF;
+  color: var(--color-text-inverse);
   border-color: var(--color-warning);
 }
 

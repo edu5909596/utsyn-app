@@ -544,16 +544,16 @@ export default function BordPage() {
                     <div className="floor-plan" ref={floorPlanRef}>
                         {/* SVG walls and structural elements */}
                         <svg className="floor-plan-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
-                            <line x1="6" y1="2" x2="6" y2="94" stroke="#c0c9d6" strokeWidth="0.6" />
-                            <line x1="6" y1="94" x2="40" y2="94" stroke="#c0c9d6" strokeWidth="0.6" />
-                            <line x1="6" y1="2" x2="97" y2="2" stroke="#c0c9d6" strokeWidth="0.6" />
-                            <line x1="60" y1="30" x2="97" y2="30" stroke="#c0c9d6" strokeWidth="0.6" />
-                            <path d="M 52 94 L 52 40 Q 52 30 60 30" stroke="#c0c9d6" strokeWidth="0.6" fill="none" />
-                            <line x1="80" y1="2" x2="80" y2="10" stroke="#c0c9d6" strokeWidth="0.6" />
-                            <line x1="80" y1="30" x2="80" y2="15" stroke="#c0c9d6" strokeWidth="0.6" />
-                            <rect x="50.5" y="37" width="1.1" height="5" fill="#aebac9" stroke="#8b9bac" strokeWidth="0.3" rx="0.3" />
-                            <rect x="49.5" y="67" width="2.5" height="13" fill="#aebac9" stroke="#8b9bac" strokeWidth="0.3" rx="0.3" />
-                            <rect x="50.5" y="83" width="1.1" height="8" fill="#aebac9" stroke="#8b9bac" strokeWidth="0.3" rx="0.3" />
+                            <line x1="6" y1="2" x2="6" y2="94" stroke="var(--color-border-light)" strokeWidth="0.6" />
+                            <line x1="6" y1="94" x2="40" y2="94" stroke="var(--color-border-light)" strokeWidth="0.6" />
+                            <line x1="6" y1="2" x2="97" y2="2" stroke="var(--color-border-light)" strokeWidth="0.6" />
+                            <line x1="60" y1="30" x2="97" y2="30" stroke="var(--color-border-light)" strokeWidth="0.6" />
+                            <path d="M 52 94 L 52 40 Q 52 30 60 30" stroke="var(--color-border-light)" strokeWidth="0.6" fill="none" />
+                            <line x1="80" y1="2" x2="80" y2="10" stroke="var(--color-border-light)" strokeWidth="0.6" />
+                            <line x1="80" y1="30" x2="80" y2="15" stroke="var(--color-border-light)" strokeWidth="0.6" />
+                            <rect x="50.5" y="37" width="1.1" height="5" fill="var(--color-primary-light)" stroke="var(--color-primary)" strokeWidth="0.3" rx="0.3" />
+                            <rect x="49.5" y="67" width="2.5" height="13" fill="var(--color-primary-light)" stroke="var(--color-primary)" strokeWidth="0.3" rx="0.3" />
+                            <rect x="50.5" y="83" width="1.1" height="8" fill="var(--color-primary-light)" stroke="var(--color-primary)" strokeWidth="0.3" rx="0.3" />
                         </svg>
 
                         {/* Pillars */}
@@ -818,18 +818,18 @@ export default function BordPage() {
                 }
 
                 .status-badge-mini.status-needs_seat {
-                    background: #fef3c7;
-                    color: #92400e;
+                    background: var(--color-warning);
+                    color: var(--color-text-inverse);
                 }
 
                 .status-badge-mini.status-confirmed {
-                    background: #d1fae5;
-                    color: #065f46;
+                    background: var(--color-available);
+                    color: var(--color-available-text);
                 }
 
                 .status-badge-mini.status-completed {
-                    background: #dbeafe;
-                    color: #1e40af;
+                    background: var(--color-info);
+                    color: var(--color-text-inverse);
                 }
                 
                 .res-card-tables {
@@ -847,7 +847,7 @@ export default function BordPage() {
                 }
                 
                 .status-ok { background: var(--color-available); color: var(--color-available-text); }
-                .status-partial { background: var(--color-warning); color: #fff; }
+                .status-partial { background: var(--color-warning); color: var(--color-text-inverse); }
                 .status-none { background: var(--color-bg-alt); color: var(--color-text-muted); }
                 
                 .floor-plan-container {
@@ -885,14 +885,14 @@ export default function BordPage() {
                 }
 
                 .editor-hint {
-                    background: #fef3c7;
-                    color: #92400e;
+                    background: var(--color-primary-50);
+                    color: var(--color-primary);
                     padding: var(--space-sm) var(--space-md);
                     border-radius: var(--radius-md);
                     font-size: var(--font-size-sm);
                     font-weight: 500;
                     margin-bottom: var(--space-md);
-                    border: 1px solid #fcd34d;
+                    border: 1px solid var(--color-primary-200);
                 }
                 
                 .floor-plan-legend {
@@ -948,14 +948,14 @@ export default function BordPage() {
                     height: 35px;
                     margin-left: -13px;
                     margin-top: -13px;
-                    background: #f0f3f7;
-                    border: 2px solid #c0c9d6;
+                    background: var(--color-bg-elevated);
+                    border: 2px solid var(--color-border-light);
                     border-radius: 50%;
                     display: flex;
                     align-items: center;
                     justify-content: center;
                     font-size: 11px;
-                    color: #888;
+                    color: var(--color-text-muted);
                     font-weight: 600;
                     z-index: 2;
                     pointer-events: none;
@@ -966,12 +966,12 @@ export default function BordPage() {
                     padding: 4px 10px;
                     margin-left: -20px;
                     margin-top: -10px;
-                    background: #e8ecf1;
-                    border: 1.5px solid #b0bac7;
+                    background: var(--color-bg-elevated);
+                    border: 1.5px solid var(--color-border);
                     border-radius: 4px;
                     font-size: 11px;
                     font-weight: 600;
-                    color: #666;
+                    color: var(--color-text-secondary);
                     z-index: 2;
                     pointer-events: none;
                     transform: rotate(90deg);
@@ -986,6 +986,7 @@ export default function BordPage() {
                     border-radius: var(--radius-md);
                     border: 2px solid var(--color-border);
                     background: var(--color-bg-card);
+                    color: var(--color-text);
                     display: flex;
                     flex-direction: column;
                     align-items: center;
@@ -1025,8 +1026,8 @@ export default function BordPage() {
                 .node-free { }
                 .node-occupied { background: var(--color-full); border-color: var(--color-error); color: var(--color-full-text); }
                 .node-has-reservations { background: var(--color-primary-50); border-color: var(--color-primary-200); }
-                .node-selected { background: var(--color-primary); border-color: var(--color-primary); color: white; box-shadow: var(--shadow-md); }
-                .node-inactive { background: #f0f3f7; border-color: #d1d9e6; color: #a0aebf; opacity: 0.6; cursor: not-allowed; }
+                .node-selected { background: var(--color-primary); border-color: var(--color-primary); color: var(--color-text-inverse); box-shadow: var(--shadow-md); }
+                .node-inactive { background: var(--color-bg-alt); border-color: var(--color-border-light); color: var(--color-text-muted); opacity: 0.6; cursor: not-allowed; }
                 .node-inactive:hover { box-shadow: none; transform: none; z-index: 5; }
                 
                 .table-name {
